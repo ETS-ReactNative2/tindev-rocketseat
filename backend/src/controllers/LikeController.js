@@ -2,6 +2,7 @@ const Dev = require('../models/Dev');
 
 module.exports = {
     async store(request, response){
+        console.log(request.io, request.users);
         const { devId } = request.params;
         const { user } = request.headers;
 
@@ -13,7 +14,16 @@ module.exports = {
         }
 
         if(targetDev.likes.includes(loggedDev._id)){
-            console.log('DEU MATCH CARAI'); 
+            const loggedSocket = request.connectedUsers[user];
+            const targetSocket = request.connectedUsers[devId];
+
+            if(loggedSocket){
+                request.io.to(loggedSocket).emit('match', targetDev);
+            }
+
+            if(targetSocket){
+                request.io.to(targetSocket).emit('match', loggedDev);
+            }
         }
 
         loggedDev.likes.push(targetDev._id);
